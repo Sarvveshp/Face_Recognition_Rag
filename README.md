@@ -172,6 +172,14 @@ face-rag-platform/
 
 This project was created for the [Katomaran Hackathon](https://katomaran.com).
 
+## 🎬 Video Implementation
+
+Watch the video demonstration of the Face Recognition Platform in action:
+
+[**Watch Demo Video**](https://drive.google.com/uc?id=1pfEuyuPnWE07ujbh5sTpT-_TcNRE-R3q&export=download)
+
+The video showcases the key features of the platform, including face registration, real-time recognition, and the AI-powered Q&A system.
+
 ## 📄 License
 
 MIT
