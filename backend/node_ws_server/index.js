@@ -143,6 +143,60 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle get registered users request
+  socket.on('get-registered-users', async () => {
+    try {
+      logger.info('Received request to get all registered users');
+
+      // Get all registered users from Python API
+      const response = await axios.get(`${PYTHON_API_URL}/faces`);
+
+      // Send response back to client
+      socket.emit('registered-users-response', {
+        users: response.data.faces || []
+      });
+
+      logger.info(`Sent ${response.data.faces?.length || 0} registered users to ${socket.id}`);
+    } catch (error) {
+      logger.error(`Error getting registered users: ${error.message}`);
+      socket.emit('registered-users-error', {
+        message: 'Failed to get registered users',
+        error: error.message
+      });
+    }
+  });
+
+  // Handle delete face request
+  socket.on('delete-face', async (data) => {
+    try {
+      const faceId = data.faceId;
+      logger.info(`Received request to delete face with ID: ${faceId}`);
+
+      // Delete face from Python API
+      const response = await axios.delete(`${PYTHON_API_URL}/delete-face/${faceId}`);
+
+      // Send response back to client
+      socket.emit('delete-face-response', {
+        success: true,
+        message: response.data.message
+      });
+
+      // Broadcast to all clients that a face was deleted
+      io.emit('face-deleted', {
+        faceId: faceId,
+        timestamp: new Date().toISOString()
+      });
+
+      logger.info(`Face with ID ${faceId} deleted successfully`);
+    } catch (error) {
+      logger.error(`Error deleting face: ${error.message}`);
+      socket.emit('delete-face-error', {
+        message: 'Failed to delete face',
+        error: error.message
+      });
+    }
+  });
+
   // Handle disconnection
   socket.on('disconnect', () => {
     logger.info(`Client disconnected: ${socket.id}`);

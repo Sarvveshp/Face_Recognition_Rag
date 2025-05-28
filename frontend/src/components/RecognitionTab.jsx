@@ -91,26 +91,41 @@ const RecognitionTab = ({ socket, showNotification }) => {
     if (!recognizedFaces.length) return null
     
     return recognizedFaces.map((face, index) => {
-      const { bounding_box, name, confidence } = face
-      const { top, right, bottom, left } = bounding_box
+      const { name, confidence } = face
       
-      // Calculate position relative to webcam container
+      // Get webcam dimensions
       const webcamElement = webcamRef.current?.video
-      const width = webcamElement?.videoWidth || 640
-      const height = webcamElement?.videoHeight || 480
       const displayWidth = webcamElement?.clientWidth || 640
       const displayHeight = webcamElement?.clientHeight || 480
       
+      // Create a centered box that will cover most faces
+      const boxWidth = displayWidth * 0.4  // 40% of webcam width
+      const boxHeight = displayHeight * 0.6 // 60% of webcam height
+      
+      // Center the box in the webcam
       const boxStyle = {
-        top: `${(top / height) * displayHeight}px`,
-        right: `${displayWidth - (right / width) * displayWidth}px`,
-        bottom: `${displayHeight - (bottom / height) * displayHeight}px`,
-        left: `${(left / width) * displayWidth}px`
+        position: 'absolute',
+        top: `${(displayHeight - boxHeight) / 2}px`,
+        left: `${(displayWidth - boxWidth) / 2}px`,
+        width: `${boxWidth}px`,
+        height: `${boxHeight}px`,
+        border: '3px solid',  // Thicker border for better visibility
+        boxSizing: 'border-box',
+        zIndex: 10
       }
       
+      // Position the label at the top of the box
       const labelStyle = {
-        top: `${(top / height) * displayHeight - 20}px`,
-        left: `${(left / width) * displayWidth}px`
+        position: 'absolute',
+        top: `${(displayHeight - boxHeight) / 2 - 30}px`,
+        left: `${(displayWidth - boxWidth) / 2}px`,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        zIndex: 11
       }
       
       // Set color based on confidence
@@ -119,16 +134,12 @@ const RecognitionTab = ({ socket, showNotification }) => {
       return (
         <div key={index}>
           <div 
-            className="face-box" 
             style={{
               ...boxStyle,
               borderColor: confidenceColor
             }}
           />
-          <div 
-            className="face-label" 
-            style={labelStyle}
-          >
+          <div style={labelStyle}>
             {name} ({Math.round(confidence * 100)}%)
           </div>
         </div>

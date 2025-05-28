@@ -126,6 +126,52 @@ class Database:
             logger.error(f"Failed to retrieve registration logs: {e}")
             raise
 
+    def delete_face_by_id(self, face_id: str) -> bool:
+        """
+        Delete a face encoding by its ID.
+        
+        Args:
+            face_id: ID of the face encoding to delete
+            
+        Returns:
+            True if deletion was successful, False otherwise
+        """
+        try:
+            from bson.objectid import ObjectId
+            
+            # Convert string ID to ObjectId
+            obj_id = ObjectId(face_id)
+            
+            # Find the face document first to get the name
+            face_doc = self.face_collection.find_one({"_id": obj_id})
+            if not face_doc:
+                logger.warning(f"No face found with ID {face_id}")
+                return False
+                
+            person_name = face_doc.get("name", "Unknown")
+            
+            # Delete the face document
+            result = self.face_collection.delete_one({"_id": obj_id})
+            
+            if result.deleted_count > 0:
+                # Log deletion
+                self.logs_collection.insert_one({
+                    "action": "deletion",
+                    "person_id": obj_id,
+                    "person_name": person_name,
+                    "timestamp": datetime.datetime.now(),
+                    "details": {"deleted_by": "api_request"}
+                })
+                
+                logger.info(f"Deleted face encoding for {person_name} with ID {face_id}")
+                return True
+            else:
+                logger.warning(f"Failed to delete face encoding with ID {face_id}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to delete face encoding: {e}")
+            return False
+
     def close(self):
         """Close MongoDB connection."""
         try:

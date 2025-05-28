@@ -26,7 +26,7 @@ The application follows a microservice architecture:
 3. **Database**
    - MongoDB for storing face encodings and metadata
 
-![Architecture Diagram](./architecture-diagram.png)
+![Architecture Diagram](./Project_Architecture.png)
 
 ## 🛠️ Setup Instructions
 
@@ -67,6 +67,23 @@ The application follows a microservice architecture:
 
 ### Running the Application
 
+#### Option 1: Using the Batch Script (Recommended for Windows)
+
+A batch script is provided to start all components with a single command:
+
+```
+.\run_project.bat
+```
+
+This will:
+1. Start the Python Face API backend
+2. Start the Node.js WebSocket Server
+3. Start the React Frontend
+
+After running the script, access the application at `http://localhost:5173`
+
+#### Option 2: Starting Components Manually
+
 1. **Start MongoDB** (if using local instance)
    ```
    mongod
@@ -75,7 +92,7 @@ The application follows a microservice architecture:
 2. **Start the Python Face API**
    ```
    cd backend/face_api
-   python app.py
+   python simple_app.py
    ```
 
 3. **Start the Node.js WebSocket Server**
@@ -97,6 +114,22 @@ The application follows a microservice architecture:
 1. **Registration**: Navigate to the Registration tab, capture your face using the webcam, and enter your name
 2. **Recognition**: Go to the Recognition tab to see real-time face recognition
 3. **Chat**: Use the Chat tab to ask questions about registered users
+4. **User Management**: In the Registration tab, scroll down to see and manage registered users
+
+### User Management
+
+The platform includes a user management interface that allows you to:
+
+- View all registered users
+- See when each user was registered
+- Delete users when needed
+
+To delete a user:
+1. Go to the Registration tab
+2. Scroll down to the "Registered Users" section
+3. Click the "Refresh List" button to see all registered users
+4. Click the "Delete" button next to the user you want to remove
+5. Confirm the deletion when prompted
 
 ## 🧩 Project Structure
 
@@ -108,7 +141,8 @@ face-rag-platform/
 │ │ ├── components/
 │ │ │ ├── RegistrationTab.jsx
 │ │ │ ├── RecognitionTab.jsx
-│ │ │ └── ChatTab.jsx
+│ │ │ ├── ChatTab.jsx
+│ │ │ └── RegisteredUsers.jsx
 │ │ ├── App.jsx
 │ │ ├── main.jsx
 │ │ └── index.css
@@ -117,16 +151,20 @@ face-rag-platform/
 │
 ├── backend/
 │ ├── face_api/ (Python)
-│ │ ├── app.py
-│ │ ├── rag_engine.py
-│ │ ├── face_utils.py
-│ │ └── db.py
+│ │ ├── app.py                 # Original implementation
+│ │ ├── simple_app.py          # Simplified implementation without face_recognition dependency
+│ │ ├── rag_engine.py          # Original RAG engine
+│ │ ├── simple_rag_engine.py   # Simplified RAG engine
+│ │ ├── face_utils.py          # Original face utilities
+│ │ ├── face_utils_mock.py     # Mock face utilities
+│ │ └── db.py                  # Database operations
 │ ├── node_ws_server/
 │ │ ├── index.js
 │ │ └── package.json
 │
+├── run_project.bat            # Batch script to run all components
 ├── requirements.txt
-├── architecture-diagram.png
+├── Project_Architecture.png   # Architecture diagram
 └── README.md
 ```
 

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import Webcam from 'react-webcam'
+import RegisteredUsers from './RegisteredUsers'
 
 const RegistrationTab = ({ socket, showNotification }) => {
   const [capturedImage, setCapturedImage] = useState(null)
@@ -150,6 +151,9 @@ const RegistrationTab = ({ socket, showNotification }) => {
           <li>Click "Register Face" to complete registration</li>
         </ol>
       </div>
+      
+      {/* Display registered users with delete functionality */}
+      <RegisteredUsers socket={socket} showNotification={showNotification} />
     </div>
   )
 }

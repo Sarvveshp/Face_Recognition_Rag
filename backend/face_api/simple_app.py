@@ -128,14 +128,52 @@ async def recognize_faces(request: RecognizeFacesRequest):
         # For demo purposes, just return the first face in the database
         mock_face = known_faces[0]
         
+        # Try to extract image dimensions from the base64 image
+        import base64
+        import io
+        from PIL import Image
+        
+        # Decode base64 image to get dimensions
+        try:
+            # Remove data URL prefix if present
+            image_data = request.image
+            if "base64," in image_data:
+                image_data = image_data.split("base64,")[1]
+            
+            # Decode base64 image
+            decoded_image = base64.b64decode(image_data)
+            img = Image.open(io.BytesIO(decoded_image))
+            
+            # Get image dimensions
+            width, height = img.size
+            
+            # Calculate more appropriate bounding box coordinates
+            # These values will place the box more centrally on the face
+            center_x = width // 2
+            center_y = height // 2
+            box_width = width // 3
+            box_height = height // 2.5
+            
+            # Calculate bounding box coordinates
+            left = max(0, center_x - box_width // 2)
+            top = max(0, center_y - box_height // 2)
+            right = min(width, center_x + box_width // 2)
+            bottom = min(height, center_y + box_height // 2)
+            
+            logger.info(f"Calculated dynamic bounding box: left={left}, top={top}, right={right}, bottom={bottom}")
+        except Exception as e:
+            logger.warning(f"Failed to calculate dynamic bounding box: {e}. Using default values.")
+            # Fallback to default values if image processing fails
+            left, top, right, bottom = 50, 50, 150, 150
+        
         recognized_faces = [{
             "name": mock_face["name"],
             "confidence": 0.95,
             "bounding_box": {
-                "top": 50,
-                "right": 150,
-                "bottom": 150,
-                "left": 50
+                "top": int(top),
+                "right": int(right),
+                "bottom": int(bottom),
+                "left": int(left)
             },
             "person_id": str(mock_face.get("_id", ""))
         }]
@@ -189,6 +227,54 @@ async def clear_chat_history():
         return {"message": "Chat history cleared successfully"}
     except Exception as e:
         logger.error(f"Failed to clear chat history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/delete-face/{face_id}")
+async def delete_face(face_id: str):
+    """
+    Delete a registered face by ID.
+    
+    Args:
+        face_id: ID of the face to delete
+        
+    Returns:
+        Success message or error
+    """
+    try:
+        success = db.delete_face_by_id(face_id)
+        
+        if success:
+            # Refresh RAG engine to update the vector store
+            rag_engine.refresh_vector_store()
+            
+            return {"success": True, "message": f"Face with ID {face_id} deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail=f"Face with ID {face_id} not found or could not be deleted")
+    except Exception as e:
+        logger.error(f"Failed to delete face: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/faces")
+async def get_all_faces():
+    """
+    Get all registered faces.
+    
+    Returns:
+        List of registered faces
+    """
+    try:
+        faces = db.get_all_face_encodings()
+        
+        # Convert ObjectId to string for JSON serialization
+        for face in faces:
+            face["_id"] = str(face["_id"])
+            # Remove the encoding field to reduce response size
+            if "encoding" in face:
+                del face["encoding"]
+        
+        return {"faces": faces, "count": len(faces)}
+    except Exception as e:
+        logger.error(f"Failed to get faces: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
