@@ -26,7 +26,7 @@ The application follows a microservice architecture:
 3. **Database**
    - MongoDB for storing face encodings and metadata
 
-![Architecture Diagram](./architecture-diagram.png)
+![Architecture Diagram](./Project_Architecture.png)
 
 ## 🛠️ Setup Instructions
 
